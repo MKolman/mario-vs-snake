@@ -17,12 +17,22 @@ class Mario(pygame.sprite.Sprite):
         """ Konstruktor """
         super().__init__()
 
+        # Stevci za slike
+        self.tek_slike = 0
+        self.tek_loop = 20
+        self.mir_slike = 0
+        self.mir_loop = 24
+        self.flip = False
+
         # Ustvari sliko in območje za igralca
-        self.sirina = 40
-        self.visina = 60
-        self.image = pygame.Surface([self.sirina, self.visina])
-        self.image.fill(MARIO_BARVA)
+        self.sirina = 50
+        self.visina = 72
+        self.image = pygame.Surface([self.sirina, self.visina], pygame.SRCALPHA)
         self.rect = self.image.get_rect()
+        self.images = pygame.image.load("spritesheet.png")
+        # self.image.fill(MARIO_BARVA)
+        # self.image.blit(self.images, (0, 0), (0, 0, 55, 75))
+        self.set_image()
 
         self.hitrost_x = 0
         self.hitrost_y = 0
@@ -30,6 +40,19 @@ class Mario(pygame.sprite.Sprite):
         self.ovire = ovire
 
         self.dvojni_skok = False
+
+    def set_image(self, akcija="mir"):
+        self.image.fill((0, 0, 0, 0))
+        if akcija == "mir":
+            n = self.mir_slike // (self.mir_loop / 4)
+            self.image.blit(self.images, (0, 0), (56*n, 169, 56*n+50, 241))
+        if akcija == "tek":
+            n = self.tek_slike // (self.tek_loop / 4)
+            self.image.blit(self.images, (0, 0), (55*n+5, 4, 55*(n+1), 76))
+        if akcija == "let":
+            self.image.blit(self.images, (0, 0), (2, 248, 52, 320))
+        if self.flip:
+            self.image = pygame.transform.flip(self.image, True, False)
 
     def update(self):
         """ Premakni mariota """
@@ -50,6 +73,17 @@ class Mario(pygame.sprite.Sprite):
             elif self.hitrost_x < 0:
                 # Ce se premikamo levo se postavimo na desno od ovire
                 self.rect.left = ovira.rect.right
+        if self.hitrost_x:
+            self.flip = False
+            if self.hitrost_x < 0:
+                self.flip = True
+            self.tek_slike += 1
+            self.tek_slike %= self.tek_loop
+            self.set_image("tek")
+        else:
+            self.mir_slike += 1
+            self.mir_slike %= self.mir_loop
+            self.set_image("mir")
 
         # ======= Smer y =========
         self.gravitacija()
@@ -71,6 +105,8 @@ class Mario(pygame.sprite.Sprite):
                 # Ce se premikamo gor se postavimo pod ovire
                 self.hitrost_y = 0
                 self.rect.top = ovira.rect.bottom
+        if self.hitrost_y:
+            self.set_image("let")
 
     def gravitacija(self):
         """ Nastavi gravitacijo """
@@ -82,11 +118,11 @@ class Mario(pygame.sprite.Sprite):
 
     def pojdi_levo(self):
         """ Ko pritisne tipko levo """
-        self.hitrost_x = -6
+        self.hitrost_x = -3
 
     def pojdi_desno(self):
         """ Ko pritisne tipko desno """
-        self.hitrost_x = 6
+        self.hitrost_x = 3
 
     def stop(self):
         """ Ko spusti tipko levo/desno """
